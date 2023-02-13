@@ -1,23 +1,46 @@
 import logo from './logo.svg';
 import './App.css';
 
+import React from "react";
+import { Route, Routes } from "react-router-dom";
+
+import Login from "./pages/login";
+import Layout from "./layout";
+
+import { createBrowserHistory } from "history";
+
+function getToken(){
+  const tokenString = sessionStorage.getItem('data');
+  if(tokenString != 'undefined'){
+    const user = JSON.parse(tokenString);
+    if(user){
+      if(user.token == 'undefined'){
+        return false;
+      }else{
+        return user.token;
+      }
+    }else{
+      return false;
+    }
+  }else{
+    return false;
+  }
+}
+
 function App() {
+  const token = getToken();
+  const history = createBrowserHistory();
+  if (!token) {
+    history.push("login");
+    return <Login />;
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className='App App-header'>
+      <Routes history={history}>
+        {!token && <Route path="/login" element={<Login />} />}
+        <Route path="*" element={<Layout />} />
+      </Routes>
     </div>
   );
 }
