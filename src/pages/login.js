@@ -13,7 +13,7 @@ import {
   MDBContainer,
   MDBCol
 } from "mdb-react-ui-kit";
-import axios from "../config/server.config";
+import axios, {client} from "../config/server.config";
 import { createBrowserHistory } from "history";
 
 import toastr from "toastr";
@@ -27,39 +27,74 @@ toastr.options = {
 export default function Login() {
   const [loginRegisterActive, handleLoginRegisterClick] = useState('login');
   const [loginData, setLoginData] = useState({ email: '', password: '' });
-  const [registerData, setRegisterData] = useState({ username: '', wallet: '' });
+  const [registerData, setRegisterData] = useState({});
 
   const history = createBrowserHistory();
 
+  client.onmessage = (res) => {
+    var res = JSON.parse(res.data.toString());
+    console.log(res)
+    if(res.type == "admin_login_confirm"){
+      if(res.data.status == 'success'){
+        sessionStorage.setItem("data", JSON.stringify(res.data));
+        history.push("/");
+        history.go("/");
+        toastr.clear();
+        setTimeout(() => toastr.success('success login'), 300);
+      }else{
+        toastr.clear();
+        setTimeout(() => toastr.error(res.data.msg), 300);
+      }
+    }else if(res.type == "register_confirm"){  
+      if(res.data.status == 'success'){
+        toastr.clear();
+        setTimeout(() => toastr.success('registered successfully'), 300);
+      }else{
+        toastr.clear();
+        setTimeout(() => toastr.error(res.data.msg), 300);
+      }
+    }
+  };
+
   const login = () => {
-    axios
-      .post('user/login', loginData)
-      .then(function (res) {
-        if(res.data.status == 'success'){
-          sessionStorage.setItem("data", JSON.stringify(res.data));
-          history.push("/");
-          history.go("/");
-          toastr.clear();
-          setTimeout(() => toastr.success('success login'), 300);
-        }else{
-          toastr.clear();
-          setTimeout(() => toastr.error(res.data.msg), 300);
-        }
-      });
+    client.send(JSON.stringify({
+      type: "admin_login",
+      data: loginData
+    }));
+
+    // axios
+    //   .post('admin/login', loginData)
+    //   .then(function (res) {
+    //     if(res.data.status == 'success'){
+    //       sessionStorage.setItem("data", JSON.stringify(res.data));
+    //       history.push("/");
+    //       history.go("/");
+    //       toastr.clear();
+    //       setTimeout(() => toastr.success('success login'), 300);
+    //     }else{
+    //       toastr.clear();
+    //       setTimeout(() => toastr.error(res.data.msg), 300);
+    //     }
+    //   });
   }
 
   const register = () => {
-    axios
-      .post('user/register', registerData)
-      .then(function (res) {
-        if(res.data.status == 'success'){
-          toastr.clear();
-          setTimeout(() => toastr.success('registered successfully'), 300);
-        }else{
-          toastr.clear();
-          setTimeout(() => toastr.error(res.data.msg), 300);
-        }
-      });
+    client.send(JSON.stringify({
+      type: "register",
+      data: registerData
+    }));
+
+    // axios
+    //   .post('user/register', registerData)
+    //   .then(function (res) {
+    //     if(res.data.status == 'success'){
+    //       toastr.clear();
+    //       setTimeout(() => toastr.success('registered successfully'), 300);
+    //     }else{
+    //       toastr.clear();
+    //       setTimeout(() => toastr.error(res.data.msg), 300);
+    //     }
+    //   });
   }
 
   return (
@@ -98,8 +133,10 @@ export default function Login() {
               </MDBTabsPane>
               <MDBTabsPane show={loginRegisterActive === 'register'}>
                 <p>Register</p>
-                <MDBInput className='mb-4' label='Username' onChange={(e) => setRegisterData({ ...registerData, username: e.target.value })} />
+                <MDBInput className='mb-4' label='userID' onChange={(e) => setRegisterData({ ...registerData, userID: e.target.value })} />
                 <MDBInput className='mb-4' label='Wallet address' onChange={(e) => setRegisterData({ ...registerData, wallet: e.target.value })} />
+                <MDBInput className='mb-4' label='Email address' type='email' onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })} />
+                <MDBInput className='mb-4' label='Password' type='password' onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })} />
                 <MDBBtn className='mb-4' block onClick={() => register()}>
                   Register
                 </MDBBtn>

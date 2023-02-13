@@ -30,10 +30,16 @@ export default function Users() {
 
   const headers = [
     {
-      name: "username",
+      name: "userID",
       center: true,
       wrap: true,
-      selector: (row) => row.username,
+      selector: (row) => row.userID,
+    },
+    {
+      name: "email",
+      center: true,
+      wrap: true,
+      selector: (row) => row.email,
     },
     {
       name: "wallet",
